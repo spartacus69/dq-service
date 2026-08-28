@@ -1,0 +1,62 @@
+# Quality contract for the `policies` data product.
+#
+# This file is the artefact worth reviewing: every rule here is a statement
+# about what downstream consumers are allowed to assume. Adding a rule is a
+# pull request, not a deployment.
+
+version: 1
+
+datasets:
+  - name: policies
+    table: policies
+
+    rules:
+      # ---- structural guarantees: zero tolerance --------------------------
+      - name: policy_id_not_null
+        type: not_null
+        column: policy_id
+        description: The business key must be populated on every row.
+
+      - name: policy_id_unique
+        type: unique
+        columns: [policy_id]
+        description: One row per policy after deduplication.
+
+      - name: customer_id_not_null
+        type: not_null
+        column: customer_id
+
+      # ---- domain guarantees ---------------------------------------------
+      - name: status_in_domain
+        type: accepted_values
+        column: status
+        values: [active, cancelled, pending]
+        description: Statuses outside this list mean the source mapping drifted.
+
+      - name: premium_not_negative
+        type: range
+        column: premium_chf
+        min: 0
+        description: A negative premium is a sign reversal, never a real value.
+
+      # ---- business rule the built-in types cannot express ----------------
+      - name: cancelled_policies_have_no_premium
+        type: expression
+        expression: "status <> 'cancelled' OR premium_chf = 0"
+        severity: warn
+        threshold: 0.01
+        description: >
+          Tolerated up to 1% while the migration of legacy cancellations runs.
+          Reduce to 0 once ticket DATA-482 is closed.
+
+      # ---- table-level guarantees ----------------------------------------
+      - name: table_not_empty
+        type: row_count
+        min: 1
+        description: An empty load is a failed load, not a quiet success.
+
+      - name: loaded_recently
+        type: freshness
+        column: loaded_at
+        max_age_hours: 24
+        description: The daily batch must have landed.

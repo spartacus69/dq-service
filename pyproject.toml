@@ -1,0 +1,82 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "dq-service"
+version = "0.1.0"
+description = "Metadata-driven data quality checks for analytical tables"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Alejandro Dodera" }]
+license = { text = "MIT" }
+keywords = ["data-quality", "data-governance", "duckdb", "data-engineering"]
+dependencies = [
+    "duckdb>=1.0",
+    "pydantic>=2.7",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "mypy>=1.10",
+    "ruff>=0.5",
+    "types-PyYAML",
+]
+
+[project.scripts]
+dq = "dq.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dq"]
+
+# ----------------------------------------------------------------------------
+# Linting
+# ----------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "ANN", "PTH", "C4"]
+ignore = ["ANN401"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ANN001", "ANN201"]
+"examples/*" = ["ANN201"]
+
+# ----------------------------------------------------------------------------
+# Typing
+# ----------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.10"
+strict = true
+files = ["src", "tests", "examples"]
+plugins = ["pydantic.mypy"]
+
+# Tests are still type-checked, but pytest fixtures and helpers are not forced
+# to carry annotations: the value of strict mode is in the library, and the
+# cost of annotating every fixture is paid on every future test.
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_untyped_calls = false
+
+[[tool.mypy.overrides]]
+module = "duckdb.*"
+ignore_missing_imports = true
+
+# ----------------------------------------------------------------------------
+# Tests
+# ----------------------------------------------------------------------------
+[tool.pytest.ini_options]
+addopts = "-q --strict-markers"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["src/dq"]
+branch = true
