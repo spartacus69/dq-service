@@ -1,6 +1,6 @@
-"""Command line entry point.
+"""Command-line interface for the dq data-quality service.
 
-Exit codes are part of the contract — a scheduler reads them:
+Exit codes are part of the CLI contract for automation and CI systems:
 
 ===  ==========================================================
 0    every rule passed, or only warnings were raised
