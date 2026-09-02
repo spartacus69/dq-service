@@ -1,3 +1,6 @@
 {
-    "python.analysis.typeCheckingMode": "standard"
+    "python.analysis.typeCheckingMode": "standard",
+    "python.defaultInterpreterPath": "C:\\venvs\\dq-service\\Scripts\\python.exe",
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": ["tests"]
 }
